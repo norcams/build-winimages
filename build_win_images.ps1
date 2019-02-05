@@ -11,7 +11,7 @@ $createImages = @(
 )
 $patchdir = "h:\patchdownload"
 $mountdir = "h:\mountdir\"
-$imagepath = "h:\os-builder\images"
+$winimagepath = "h:\os-builder\images"
 $winimagebuilderpath = "c:\os-builder\windows-openstack-imaging-tools\"
 $virtIOISOPath = "$patchdir\virtio.iso"
 $virtIODownloadLink = "https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.164-1/virtio-win.iso"
@@ -83,7 +83,7 @@ $windowsVersions | ForEach-Object -Process {
     Dismount-WindowsImage -Path "$mountdir" -Discard
     # Start the image building process...
     $imagename = "$imagenameBase-$variant.$disktype"
-    $windowsImagePath = "$imagepath\$imagename"
+    $windowsImagePath = "$winimagepath\$imagename"
     $imagename
     # Move old files
     Remove-Item "$imagepath\$imagename_old" -ErrorAction Ignore
