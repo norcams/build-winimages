@@ -88,6 +88,8 @@ $windowsVersions | ForEach-Object -Process {
     # Move old files
     Remove-Item "$imagepath\$imagename_old" -ErrorAction Ignore
     Remove-Item "$imagepath\$imagename_old.sha256" -ErrorAction Ignore
+    Move-Item "$imagepath\$imagename.sha256" "$imagepath\$imagename_old.sha256" -ErrorAction Ignore
+    Move-Item "$imagepath\$imagename" "$imagepath\$imagename_old" -ErrorAction Ignore
     # Downloading virtio...
     (New-Object System.Net.WebClient).DownloadFile($virtIODownloadLink, $virtIOISOPath)
     # Real index for this install
