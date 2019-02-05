@@ -7,7 +7,7 @@
 # distinguish server versions. Variants must correspond with indexes (from VIM file).
 $createImages = @(
   ('Windows Server 2019', 'h:\installsource\server2019\sources\install.wim', '1,2', 'windows10', '17763', 'Core,Standard', 'win2019-server', 'qcow2', 'KVM'),
-  ('Windows Server 2016', 'h:\installsource\server2016\sources\install.wim', '1,2', 'windows10', '14393', 'Standard', 'win2016-server', 'qcow2', 'KVM')
+  ('Windows Server 2016', 'h:\installsource\server2016\sources\install.wim', '2,2', 'windows10', '14393', 'Standard', 'win2016-server', 'qcow2', 'KVM')
 )
 $patchdir = "h:\patchdownload"
 $mountdir = "h:\mountdir\"
