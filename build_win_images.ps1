@@ -6,8 +6,8 @@
 # We need to know versionname, path to wim file, indexes to patch, windows version for updates, and build number to
 # distinguish server versions. Variants must correspond with indexes (from VIM file).
 $createImages = @(
-  ('Windows Server 2019', 'h:\installsource\server2019\sources\install.wim', '1,2', 'windows10', '17763', 'Core,Standard', 'win2019-server', 'qcow2', 'KVM'),
-  ('Windows Server 2016', 'h:\installsource\server2016\sources\install.wim', '2,2', 'windows10', '14393', 'Standard', 'win2016-server', 'qcow2', 'KVM')
+  ('Windows Server 2019', 'h:\installsource\server2019\sources\install.wim', '1,2', 'windows10', '17763', 'core,standard', 'win2019-server', 'qcow2', 'KVM'),
+  ('Windows Server 2016', 'h:\installsource\server2016\sources\install.wim', '2,2', 'windows10', '14393', 'standard', 'win2016-server', 'qcow2', 'KVM')
 )
 $patchdir = "h:\patchdownload"
 $mountdir = "h:\mountdir\"
@@ -15,7 +15,7 @@ $winimagepath = "h:\os-builder\images"
 $winimagebuilderpath = "c:\os-builder\windows-openstack-imaging-tools\"
 $virtIOISOPath = "$patchdir\virtio.iso"
 $virtIODownloadLink = "https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.164-1/virtio-win.iso"
-$extraDriversPath = "C:\os-builder\drivers"
+$extraDriversPath = "C:\os-builder\drivers\"
 $switchName = "NATswitch"
 $ErrorActionPreference = "Stop"
 
