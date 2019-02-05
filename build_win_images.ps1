@@ -100,5 +100,9 @@ $windowsVersions | ForEach-Object -Process {
     -ExtraDriversPath $extraDriversPath `
     -InstallUpdates:$true -AdministratorPassword 'Pa$$w0rd' `
     -PurgeUpdates:$true -DisableSwap:$true -Force:$true
+    # Compute checksum and write to file
+    $checksum = (Get-FileHash $$windowsImagePath -Algorithm SHA256)
+    Set-Content "$imagepath\$imagename.sha256" $checksum.ToLower() -NoNewLine
+    Add-Content "$imagepath\$imagename.sha256" " $imagename"
   }
 }
