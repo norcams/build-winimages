@@ -93,6 +93,7 @@ $windowsVersions | ForEach-Object -Process {
     # Real index for this install
     $realindex = $thisindex-1
     $installImageName = (Get-WimFileImagesInfo -WimFilePath "$imagepath")[$realindex]
+    Set-Location -Path $winimagebuilderpath
     New-WindowsOnlineImage -WimFilePath $imagepath -ImageName $installImageName.ImageName `
     -WindowsImagePath "$windowsImagePath"  -Type $virttype -ExtraFeatures @() `
     -SizeBytes 30GB -CpuCore 2 -Memory 4GB -SwitchName $switchName `
@@ -101,7 +102,7 @@ $windowsVersions | ForEach-Object -Process {
     -InstallUpdates:$true -AdministratorPassword 'Pa$$w0rd' `
     -PurgeUpdates:$true -DisableSwap:$true -Force:$true
     # Compute checksum and write to file
-    $checksum = (Get-FileHash $$windowsImagePath -Algorithm SHA256)
+    $checksum = (Get-FileHash $windowsImagePath -Algorithm SHA256)
     Set-Content "$imagepath\$imagename.sha256" $checksum.ToLower() -NoNewLine
     Add-Content "$imagepath\$imagename.sha256" " $imagename"
   }
