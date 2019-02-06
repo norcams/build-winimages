@@ -15,7 +15,7 @@ $winimagepath = "h:\os-builder\images"
 $winimagebuilderpath = "c:\os-builder\windows-openstack-imaging-tools\"
 $virtIOISOPath = "$patchdir\virtio.iso"
 $virtIODownloadLink = "https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.164-1/virtio-win.iso"
-$extraDriversPath = "C:\os-builder\drivers\"
+$extraDriversPath = "C:\os-builder\drivers\" #     -ExtraDriversPath $extraDriversPath `
 $switchName = "NATswitch"
 $ErrorActionPreference = "Stop"
 
@@ -86,10 +86,10 @@ $windowsVersions | ForEach-Object -Process {
     $windowsImagePath = "$winimagepath\$imagename"
     $imagename
     # Move old files
-    Remove-Item "$imagepath\$imagename_old" -ErrorAction Ignore
-    Remove-Item "$imagepath\$imagename_old.sha256" -ErrorAction Ignore
-    Move-Item "$imagepath\$imagename.sha256" "$imagepath\$imagename_old.sha256" -ErrorAction Ignore
-    Move-Item "$imagepath\$imagename" "$imagepath\$imagename_old" -ErrorAction Ignore
+    Remove-Item "$(winimagepath)\$(imagename)_old" -ErrorAction Ignore
+    Remove-Item "$(winimagepath)\$(imagename)_old.sha256" -ErrorAction Ignore
+    Move-Item "$(winimagepath)\$(imagename).sha256" "$(winimagepath)\$(imagename)_old.sha256" -ErrorAction Ignore
+    Move-Item "$(winimagepath)\$(imagename)" "$(winimagepath)\$(imagename)_old" -ErrorAction Ignore
     # Downloading virtio...
     (New-Object System.Net.WebClient).DownloadFile($virtIODownloadLink, $virtIOISOPath)
     # Real index for this install
@@ -100,7 +100,6 @@ $windowsVersions | ForEach-Object -Process {
     -WindowsImagePath "$windowsImagePath"  -Type $virttype -ExtraFeatures @() `
     -SizeBytes 30GB -CpuCore 2 -Memory 4GB -SwitchName $switchName `
     -ProductKey $productKey -DiskLayout 'BIOS' -VirtioISOPath $virtIOISOPath `
-    -ExtraDriversPath $extraDriversPath `
     -InstallUpdates:$true -AdministratorPassword 'Pa$$w0rd' `
     -PurgeUpdates:$true -DisableSwap:$true -Force:$true
     # Compute checksum and write to file
