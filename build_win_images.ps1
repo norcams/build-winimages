@@ -1,7 +1,17 @@
-# A wrapper script for creating windows images and patch install sources.
+# A wrapper script for creating windows images and patch install sources. It requires Hyper-V on a host
+# with a fairly new Windows Version in order to build the images. Create a virtual NAT switch as the VM build process
+# requires a connection to the Internet.
 #
-# windows-openstack-imaging-tools is required. Download from
-# https://github.com/cloudbase/windows-openstack-imaging-tools
+# windows-openstack-imaging-tools from CloudBase is required. Download our fork from
+# https://github.com/norcams/windows-openstack-imaging-tools
+#
+# In addition, the windows-openstack-imaging-tools needs WindowsupdateCLI. Download from
+# https://github.com/cloudbase/WindowsUpdateCLI
+# and rename the folder so that you have this in your path:
+# [...]..\windows-openstack-imaging-tools\UnattendResources\WindowsUpdates\WindowsUpdates\WindowsUpdates.psm1
+#
+# Note that this wrapper script only works with the "norcams" branch of the windows-openstack-imaging-tools.
+#
 #
 # We need to know versionname, path to wim file, indexes to patch, windows version for updates, and build number to
 # distinguish server versions. Variants must correspond with indexes (from VIM file).
@@ -50,6 +60,7 @@ else {
 Import-Module "$winimagebuilderpath\WinImageBuilder.psm1"
 
 $windowsVersions | ForEach-Object -Process {
+  # Download latest Cumulative Update from Windows Update
   $updates = $(Get-LatestUpdate -WindowsVersion $_.likeness -Build $_.build)
   $dlversion = $_.version
   $dlupdate = $updates | Where-Object -Property Note -Like "*$dlversion*"
@@ -74,28 +85,25 @@ $windowsVersions | ForEach-Object -Process {
     Write-Host "Building $winname $variant"
     $indexnumber = $([array]::IndexOf($variants, $variant))
     $thisindex = $index[$indexnumber]
+    # Mount the relevant .wim image and patch with msu file
     Write-Host "Mounting wim image, index $thisindex"
     Write-host "-Path $mountdir -ImagePath $imagepath -Index $thisindex"
     Mount-WindowsImage -Path "$mountdir" -ImagePath "$imagepath" -Index $thisindex
-    # Adding update package...
     Add-WindowsPackage -Path "$mountdir" -PackagePath "$patchdir\$filename" -LogPath "$patchdir\$winname $variant.log"
-    Save-WindowsImage -Path "$mountdir"
-    Dismount-WindowsImage -Path "$mountdir" -Discard
+    Dismount-WindowsImage -Path "$mountdir" -Save
     # Start the image building process...
     $imagename = "$imagenameBase-$variant.$disktype"
     $windowsImagePath = "$winimagepath\$imagename"
     $imagename
     # Move old files
-    Remove-Item "$(winimagepath)\$(imagename)_old" -ErrorAction Ignore
-    Remove-Item "$(winimagepath)\$(imagename)_old.sha256" -ErrorAction Ignore
-    Move-Item "$(winimagepath)\$(imagename).sha256" "$(winimagepath)\$(imagename)_old.sha256" -ErrorAction Ignore
-    Move-Item "$(winimagepath)\$(imagename)" "$(winimagepath)\$(imagename)_old" -ErrorAction Ignore
+    Remove-Item "$($winimagepath)\$($imagename)_old" -ErrorAction Ignore
+    Remove-Item "$($winimagepath)\$($imagename)_old.sha256" -ErrorAction Ignore
+    Move-Item "$($winimagepath)\$($imagename).sha256" "$($winimagepath)\$($imagename)_old.sha256" -ErrorAction Ignore
+    Move-Item "$($winimagepath)\$($imagename)" "$($winimagepath)\$($imagename)_old" -ErrorAction Ignore
     # Downloading virtio...
     (New-Object System.Net.WebClient).DownloadFile($virtIODownloadLink, $virtIOISOPath)
-    # Real index for this install
-    $realindex = $thisindex-1
-    $installImageName = (Get-WimFileImagesInfo -WimFilePath "$imagepath")[$realindex]
-    Set-Location -Path $winimagebuilderpath
+    $installImageName = (Get-WindowsImage -ImagePath "$imagepath" -Index $thisindex)
+    # Build the image on the Hyper-V host
     New-WindowsOnlineImage -WimFilePath $imagepath -ImageName $installImageName.ImageName `
     -WindowsImagePath "$windowsImagePath"  -Type $virttype -ExtraFeatures @() `
     -SizeBytes 30GB -CpuCore 2 -Memory 4GB -SwitchName $switchName `
@@ -104,7 +112,7 @@ $windowsVersions | ForEach-Object -Process {
     -PurgeUpdates:$true -DisableSwap:$true -Force:$true
     # Compute checksum and write to file
     $checksum = (Get-FileHash $windowsImagePath -Algorithm SHA256)
-    Set-Content "$imagepath\$imagename.sha256" $checksum.Hash.ToLower() -NoNewLine
-    Add-Content "$imagepath\$imagename.sha256" " $imagename"
+    Set-Content "$($winimagepath)\$($imagename).sha256" $checksum.Hash.ToLower() -NoNewLine
+    Add-Content "$($winimagepath)\$($imagename).sha256" " $imagename"
   }
 }
