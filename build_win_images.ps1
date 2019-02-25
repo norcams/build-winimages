@@ -14,7 +14,8 @@
 #
 #
 # We need to know versionname, path to wim file, indexes to patch, windows version for updates, and build number to
-# distinguish server versions. Variants must correspond with indexes (from VIM file).
+# distinguish server versions. Variants must correspond with indexes (from VIM file). For the install.wim, keep an original
+# install.wim called install.wim_orig so we can start as cleanly as possible for each run.
 $createImages = @(
   ('Windows Server 2019', 'h:\installsource\server2019\sources\install.wim', '1,2', 'windows10', '17763', 'core,standard', 'win2019-server', 'qcow2', 'KVM'),
   ('Windows Server 2016', 'h:\installsource\server2016\sources\install.wim', '2,2', 'windows10', '14393', 'standard', 'win2016-server', 'qcow2', 'KVM')
@@ -72,7 +73,6 @@ $windowsVersions | ForEach-Object -Process {
     Write-Host "Downloading update..."
     (New-Object System.Net.WebClient).DownloadFile($dlupdate.URL, "$patchdir\$filename")
   }
-  # Build images
   $imagenameBase = $_.filename
   $disktype = $_.disktype
   $winname = $_.version
@@ -80,6 +80,10 @@ $windowsVersions | ForEach-Object -Process {
   $index = $_.indexes.Split(",")
   $imagepath = $_.vimpath
   $virttype = $_.virttype
+  # For each Windows version, copy a clean install.wim to patch
+  Remove-Item "$($imagepath)" -ErrorAction Ignore
+  Copy-Item "$($imagepath)_orig" -Destination "$($imagepath)"
+  # Build images
   $_.variants.Split(',') | ForEach {
     $variant = $_
     Write-Host "Building $winname $variant"
@@ -112,7 +116,7 @@ $windowsVersions | ForEach-Object -Process {
     -PurgeUpdates:$true -DisableSwap:$true -Force:$true
     # Compute checksum and write to file
     $checksum = (Get-FileHash $windowsImagePath -Algorithm SHA256)
-    Set-Content "$($winimagepath)\$($imagename).sha256" $checksum.Hash.ToLower() -NoNewLine
-    Add-Content "$($winimagepath)\$($imagename).sha256" " $imagename" -Encoding UTF8
+    Set-Content "$($winimagepath)\$($imagename).sha256" $checksum.Hash.ToLower() -Encoding Ascii -NoNewLine
+    Add-Content "$($winimagepath)\$($imagename).sha256" " $imagename" -Encoding Ascii -NoNewLine
   }
 }
