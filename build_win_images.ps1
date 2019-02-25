@@ -113,6 +113,6 @@ $windowsVersions | ForEach-Object -Process {
     # Compute checksum and write to file
     $checksum = (Get-FileHash $windowsImagePath -Algorithm SHA256)
     Set-Content "$($winimagepath)\$($imagename).sha256" $checksum.Hash.ToLower() -NoNewLine
-    Add-Content "$($winimagepath)\$($imagename).sha256" " $imagename"
+    Add-Content "$($winimagepath)\$($imagename).sha256" " $imagename" -Encoding UTF8
   }
 }
