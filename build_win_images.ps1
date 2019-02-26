@@ -29,6 +29,15 @@ $virtIODownloadLink = "https://fedorapeople.org/groups/virt/virtio-win/direct-do
 $extraDriversPath = "C:\os-builder\drivers\" #     -ExtraDriversPath $extraDriversPath `
 $switchName = "NATswitch"
 $ErrorActionPreference = "Stop"
+$sendMailWhenDone = $false
+$sendMailTo = "<admin@example.com>"
+$sendMailFrom = "image builder server <admin@server.example.com>"
+$smtpServer = "localhost"
+$sendMailSubject = "[Windows image builder] image was built"
+$sendMailHeader = "##[Windows image builder]`n A patched install source is created: "
+$sendMailFooter = "`n*Regards from the image builder team*"
+$sendMailToTeams = $false
+$teamsUri = "your microsoft teams webhook uri"
 
 $windowsVersions = @()
 
@@ -50,7 +59,8 @@ $windowsVersions
 
 # Check if prerequisites are installed
 if (Get-Module -ListAvailable -Name LatestUpdate) {
-   # Write-Host "Module LatestUpdate installed"
+  # Write-Host "Module LatestUpdate installed - updating"
+  Update-Module -Name LatestUpdate
 } 
 else {
   Write-Host "Installing MsrcSecurityUpdate"
@@ -66,6 +76,7 @@ $windowsVersions | ForEach-Object -Process {
   $dlversion = $_.version
   $dlupdate = $updates | Where-Object -Property Note -Like "*$dlversion*"
   $filename = $dlupdate.URL.Split('/')[-1]
+  $kbNote = $dlupdate.Note
   if (Test-Path -Path "$patchdir\$filename") {
     Write-Host "File exists"
   }
@@ -99,6 +110,9 @@ $windowsVersions | ForEach-Object -Process {
     $imagename = "$imagenameBase-$variant.$disktype"
     $windowsImagePath = "$winimagepath\$imagename"
     $imagename
+    $sendMailMessage = "$($sendMailHeader)"
+    $sendMailMessage += "**$($imagenameBase)-$($variant)** was patched with`n`n **$($kbNote)**`n`n"
+    $sendMailMessage += "$($imagenameBase)-$($variant) has index **$($thisindex)** in *$($ImagePath)*`n`n"
     # Move old files
     Remove-Item "$($winimagepath)\$($imagename)_old" -ErrorAction Ignore
     Remove-Item "$($winimagepath)\$($imagename)_old.sha256" -ErrorAction Ignore
@@ -118,5 +132,14 @@ $windowsVersions | ForEach-Object -Process {
     $checksum = (Get-FileHash $windowsImagePath -Algorithm SHA256)
     Set-Content "$($winimagepath)\$($imagename).sha256" $checksum.Hash.ToLower() -Encoding Ascii -NoNewLine
     Add-Content "$($winimagepath)\$($imagename).sha256" " $imagename" -Encoding Ascii -NoNewLine
+    $sendMailMessage += "Cloud image created: $($windowsImagePath)`n"
+    $sendMailMessage += $($sendMailFooter)
+    if ($sendMailToTeams -eq $true) {
+      $body = (ConvertTo-JSON @{ text = "$($sendMailMessage)"})
+      Invoke-RestMethod -uri $teamsUri -Method Post -Body ([System.Text.Encoding]::UTF8.GetBytes($body)) -ContentType 'application/json'
+    }
+    if ($sendMailWhenDone -eq $true) {
+      Send-MailMessage -From  $($sendMailFrom) -To $($sendMailTo) -Subject "$($sendMailSubject)" -Body "$($sendMailMessage)" -SmtpServer $smtpServer -Verbose
+    }
   }
 }
