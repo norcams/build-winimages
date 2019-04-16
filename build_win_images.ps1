@@ -72,7 +72,7 @@ Import-Module "$winimagebuilderpath\WinImageBuilder.psm1"
 
 $windowsVersions | ForEach-Object -Process {
   # Download latest Cumulative Update from Windows Update
-  $updates = $(Get-LatestUpdate -WindowsVersion $_.likeness -Build $_.build | Where-Object { $_.Note -notlike "*Delta*"})
+  $updates = $(Get-LatestUpdate -WindowsVersion $_.likeness -Build $_.build | Where-Object { $_.Note -like "*Cumulative*"})
   $dlversion = $_.version
   $dlupdate = $updates | Where-Object -Property Note -Like "*$dlversion*"
   $filename = $dlupdate.URL.Split('/')[-1]
