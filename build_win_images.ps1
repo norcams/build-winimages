@@ -60,7 +60,7 @@ $windowsVersions
 # Check if prerequisites are installed
 if (Get-Module -ListAvailable -Name LatestUpdate) {
   # Write-Host "Module LatestUpdate installed - updating"
-  Update-Module -Name LatestUpdate
+  Update-Module -Name LatestUpdate -Force
 } 
 else {
   Write-Host "Installing MsrcSecurityUpdate"
