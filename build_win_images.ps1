@@ -25,7 +25,7 @@ $mountdir = "h:\mountdir\"
 $winimagepath = "h:\os-builder\images"
 $winimagebuilderpath = "c:\os-builder\windows-openstack-imaging-tools\"
 $virtIOISOPath = "$patchdir\virtio.iso"
-$virtIODownloadLink = "https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.164-1/virtio-win.iso"
+$virtIODownloadLink = "https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.164-2/virtio-win.iso"
 $extraDriversPath = "C:\os-builder\drivers\" #     -ExtraDriversPath $extraDriversPath `
 $switchName = "NATswitch"
 $ErrorActionPreference = "Stop"
@@ -119,6 +119,7 @@ $windowsVersions | ForEach-Object -Process {
     Move-Item "$($winimagepath)\$($imagename).sha256" "$($winimagepath)\$($imagename)_old.sha256" -ErrorAction Ignore
     Move-Item "$($winimagepath)\$($imagename)" "$($winimagepath)\$($imagename)_old" -ErrorAction Ignore
     # Downloading virtio...
+    [Net.ServicePointManager]::SecurityProtocol = "tls12, tls11"
     (New-Object System.Net.WebClient).DownloadFile($virtIODownloadLink, $virtIOISOPath)
     $installImageName = (Get-WindowsImage -ImagePath "$imagepath" -Index $thisindex)
     # Build the image on the Hyper-V host
